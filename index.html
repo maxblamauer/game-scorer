@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Skyjo Scorer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    min-height: 100vh;
+    padding: 20px;
+    -webkit-text-size-adjust: 100%;
+  }
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 8px;
+    color: #e94560;
+  }
+  .subtitle {
+    text-align: center;
+    color: #888;
+    margin-bottom: 24px;
+    font-size: 0.9rem;
+  }
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .card {
+    background: #16213e;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+    border: 1px solid #0f3460;
+  }
+  .card h2 {
+    margin-bottom: 16px;
+    color: #e94560;
+    font-size: 1.2rem;
+  }
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    color: #aaa;
+  }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    background: #1a1a2e;
+    color: #eee;
+    font-size: 16px;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  input:focus {
+    border-color: #e94560;
+  }
+  input[type="number"] {
+    width: 100px;
+    text-align: center;
+  }
+  button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 44px;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-primary {
+    background: #e94560;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #c73652; }
+  .btn-secondary {
+    background: #0f3460;
+    color: #eee;
+  }
+  .btn-secondary:hover { background: #1a4a8a; }
+  .btn-danger {
+    background: #6b2020;
+    color: #eee;
+    font-size: 0.85rem;
+    padding: 8px 14px;
+  }
+  .btn-danger:hover { background: #8b3030; }
+  .player-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .player-row input[type="text"] {
+    flex: 1;
+    margin-bottom: 0;
+  }
+  .add-remove-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .add-remove-btns button {
+    font-size: 0.9rem;
+    padding: 10px 14px;
+    flex: 1;
+  }
+  .scoreboard {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+  }
+  .scoreboard th, .scoreboard td {
+    padding: 10px 8px;
+    text-align: center;
+    border-bottom: 1px solid #0f3460;
+  }
+  .scoreboard th {
+    color: #e94560;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .scoreboard .total-row td {
+    font-weight: bold;
+    font-size: 1.1rem;
+    border-top: 2px solid #e94560;
+    border-bottom: none;
+    color: #fff;
+  }
+  .scoreboard .round-score {
+    color: #aaa;
+    font-size: 0.9rem;
+  }
+  .scoreboard .doubled { color: #e94560; }
+  .scoreboard .negative { color: #4ecca3; }
+  .round-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .round-player {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .round-player .name {
+    font-weight: 600;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .round-player .ender-label {
+    font-size: 0.75rem;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .round-player input[type="radio"] {
+    accent-color: #e94560;
+    width: 18px;
+    height: 18px;
+  }
+  .round-player input[type="number"] { margin-bottom: 0; }
+  .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .game-over {
+    text-align: center;
+    padding: 32px 24px;
+  }
+  .game-over .winner {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #4ecca3;
+    margin: 12px 0;
+  }
+  .game-over .trophy {
+    font-size: 3rem;
+    margin-bottom: 8px;
+  }
+  .hidden { display: none !important; }
+  .info-box {
+    background: #0f3460;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    color: #aaa;
+    line-height: 1.5;
+  }
+  .round-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Skyjo Scorer</h1>
+  <p class="subtitle">Keep score across rounds &mdash; lowest total wins!</p>
+
+  <div id="setup-screen" class="card">
+    <h2>Players</h2>
+    <div id="player-inputs" class="player-inputs">
+      <div class="player-row"><input type="text" placeholder="Player 1" maxlength="20"></div>
+      <div class="player-row"><input type="text" placeholder="Player 2" maxlength="20"></div>
+    </div>
+    <div class="add-remove-btns">
+      <button class="btn-secondary" onclick="addPlayerInput()">+ Add Player</button>
+      <button class="btn-secondary" onclick="removePlayerInput()">- Remove</button>
+    </div>
+    <br>
+    <button class="btn-primary" onclick="startGame()" style="width:100%">Start Game</button>
+  </div>
+
+  <div id="game-screen" class="hidden">
+    <div class="card">
+      <div class="round-header">
+        <h2>Scoreboard</h2>
+        <button class="btn-danger" onclick="newGame()">New Game</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="scoreboard" id="scoreboard"></table>
+      </div>
+    </div>
+    <div id="round-input-card" class="card">
+      <h2 id="round-title">Round 1</h2>
+      <div class="info-box">
+        Enter each player's card total. Select who ended the round (flipped all cards first). If the ender doesn't have the lowest score, their points are doubled.
+      </div>
+      <div id="round-entry" class="round-entry"></div>
+      <br>
+      <div class="actions">
+        <button class="btn-primary" onclick="submitRound()">Submit Round</button>
+        <button class="btn-secondary" id="undo-btn" onclick="undoLastRound()">Undo Last Round</button>
+      </div>
+    </div>
+    <div id="game-over" class="card hidden">
+      <div class="game-over">
+        <div class="trophy">&#127942;</div>
+        <div>Game Over!</div>
+        <div class="winner" id="winner-name"></div>
+        <div id="winner-detail" style="color:#888; margin-bottom:20px"></div>
+        <div class="actions" style="justify-content:center">
+          <button class="btn-primary" onclick="newGame()">New Game</button>
+          <button class="btn-secondary" onclick="playAgain()">Play Again (Same Players)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+var players = [];
+var rounds = [];
+var gameOver = false;
+var storageAvailable = false;
+var STORAGE_KEY = 'skyjo-game';
+
+try {
+  localStorage.setItem('_test', '1');
+  localStorage.removeItem('_test');
+  storageAvailable = true;
+} catch (e) {
+  storageAvailable = false;
+}
+
+function saveState() {
+  if (!storageAvailable) return;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ players: players, rounds: rounds, gameOver: gameOver })); } catch (e) {}
+}
+function loadState() {
+  if (!storageAvailable) return false;
+  try {
+    var data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (data && data.players && data.players.length > 0) {
+      players = data.players;
+      rounds = data.rounds || [];
+      gameOver = data.gameOver || false;
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+function clearState() {
+  if (!storageAvailable) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+}
+
+function init() {
+  if (loadState()) {
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    renderScoreboard();
+    if (gameOver) {
+      var totals = players.map(function(_, pi) {
+        return rounds.reduce(function(sum, r) { return sum + r[pi].finalScore; }, 0);
+      });
+      endGame(totals);
+    } else {
+      document.getElementById('game-over').classList.add('hidden');
+      document.getElementById('round-input-card').classList.remove('hidden');
+      renderRoundInput();
+    }
+    return;
+  }
+}
+
+function addPlayerInput() {
+  var container = document.getElementById('player-inputs');
+  var count = container.children.length;
+  if (count >= 8) return;
+  var div = document.createElement('div');
+  div.className = 'player-row';
+  div.innerHTML = '<input type="text" placeholder="Player ' + (count + 1) + '" maxlength="20">';
+  container.appendChild(div);
+}
+
+function removePlayerInput() {
+  var container = document.getElementById('player-inputs');
+  if (container.children.length > 2) container.removeChild(container.lastChild);
+}
+
+function startGame() {
+  var inputs = document.querySelectorAll('#player-inputs input');
+  players = [];
+  for (var i = 0; i < inputs.length; i++) {
+    var name = inputs[i].value.trim() || ('Player ' + (i + 1));
+    players.push(name);
+  }
+  rounds = [];
+  gameOver = false;
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('game-screen').classList.remove('hidden');
+  document.getElementById('game-over').classList.add('hidden');
+  document.getElementById('round-input-card').classList.remove('hidden');
+  renderScoreboard();
+  renderRoundInput();
+  saveState();
+}
+
+function renderScoreboard() {
+  var table = document.getElementById('scoreboard');
+  var totals = [];
+  for (var i = 0; i < players.length; i++) totals.push(0);
+  var html = '<thead><tr><th></th>';
+  for (var i = 0; i < players.length; i++) html += '<th>' + esc(players[i]) + '</th>';
+  html += '</tr></thead><tbody>';
+  for (var ri = 0; ri < rounds.length; ri++) {
+    html += '<tr><td style="color:#888;font-size:0.8rem;text-align:left">R' + (ri + 1) + '</td>';
+    for (var pi = 0; pi < rounds[ri].length; pi++) {
+      var entry = rounds[ri][pi];
+      totals[pi] += entry.finalScore;
+      var cls = 'round-score';
+      if (entry.doubled) cls += ' doubled';
+      if (entry.finalScore < 0) cls += ' negative';
+      var suffix = entry.doubled ? ' (x2)' : '';
+      var enderMark = entry.wasEnder ? '*' : '';
+      html += '<td class="' + cls + '">' + entry.finalScore + suffix + enderMark + '</td>';
+    }
+    html += '</tr>';
+  }
+  var minTotal = totals[0];
+  for (var i = 1; i < totals.length; i++) if (totals[i] < minTotal) minTotal = totals[i];
+  html += '<tr class="total-row"><td style="text-align:left;font-size:0.8rem">Total</td>';
+  for (var i = 0; i < totals.length; i++) {
+    var style = (totals[i] === minTotal && rounds.length > 0) ? 'color:#4ecca3' : '';
+    html += '<td style="' + style + '">' + totals[i] + '</td>';
+  }
+  html += '</tr></tbody>';
+  table.innerHTML = html;
+  document.getElementById('undo-btn').classList.toggle('hidden', rounds.length === 0);
+}
+
+function renderRoundInput() {
+  document.getElementById('round-title').textContent = 'Round ' + (rounds.length + 1);
+  var container = document.getElementById('round-entry');
+  container.innerHTML = '';
+  for (var i = 0; i < players.length; i++) {
+    var div = document.createElement('div');
+    div.className = 'round-player';
+    div.innerHTML =
+      '<span class="name">' + esc(players[i]) + '</span>' +
+      '<label class="ender-label"><input type="radio" name="ender" value="' + i + '"> Ended</label>' +
+      '<input type="number" id="score-' + i + '" placeholder="0" inputmode="numeric" pattern="-?[0-9]*">';
+    container.appendChild(div);
+  }
+}
+
+function submitRound() {
+  if (gameOver) return;
+  var scores = [];
+  var valid = true;
+  for (var i = 0; i < players.length; i++) {
+    var input = document.getElementById('score-' + i);
+    var val = input.value.trim();
+    if (val === '') valid = false;
+    scores.push(parseInt(val, 10) || 0);
+  }
+  if (!valid) { alert('Please enter a score for every player.'); return; }
+  var enderRadio = document.querySelector('input[name="ender"]:checked');
+  var enderIndex = enderRadio ? parseInt(enderRadio.value) : -1;
+  var round = [];
+  for (var i = 0; i < players.length; i++) {
+    var finalScore = scores[i];
+    var doubled = false;
+    if (i === enderIndex && scores[i] > 0) {
+      var beaten = false;
+      for (var j = 0; j < scores.length; j++) {
+        if (j !== i && scores[j] <= scores[i]) { beaten = true; break; }
+      }
+      if (beaten) { finalScore = scores[i] * 2; doubled = true; }
+    }
+    round.push({ name: players[i], rawScore: scores[i], wasEnder: i === enderIndex, finalScore: finalScore, doubled: doubled });
+  }
+  rounds.push(round);
+  renderScoreboard();
+  var totals = [];
+  for (var pi = 0; pi < players.length; pi++) {
+    var t = 0;
+    for (var ri = 0; ri < rounds.length; ri++) t += rounds[ri][pi].finalScore;
+    totals.push(t);
+  }
+  var over = false;
+  for (var i = 0; i < totals.length; i++) if (totals[i] >= 100) { over = true; break; }
+  if (over) endGame(totals);
+  else renderRoundInput();
+  saveState();
+}
+
+function undoLastRound() {
+  if (rounds.length === 0) return;
+  rounds.pop();
+  gameOver = false;
+  document.getElementById('game-over').classList.add('hidden');
+  document.getElementById('round-input-card').classList.remove('hidden');
+  renderScoreboard();
+  renderRoundInput();
+  saveState();
+}
+
+function endGame(totals) {
+  gameOver = true;
+  var minTotal = totals[0], winnerIndex = 0;
+  for (var i = 1; i < totals.length; i++) if (totals[i] < minTotal) { minTotal = totals[i]; winnerIndex = i; }
+  document.getElementById('round-input-card').classList.add('hidden');
+  document.getElementById('game-over').classList.remove('hidden');
+  document.getElementById('winner-name').textContent = players[winnerIndex] + ' wins!';
+  document.getElementById('winner-detail').textContent = 'with ' + minTotal + ' points (' + rounds.length + ' rounds)';
+  saveState();
+}
+
+function newGame() {
+  clearState();
+  document.getElementById('setup-screen').classList.remove('hidden');
+  document.getElementById('game-screen').classList.add('hidden');
+  players = [];
+  rounds = [];
+  gameOver = false;
+  document.getElementById('player-inputs').innerHTML =
+    '<div class="player-row"><input type="text" placeholder="Player 1" maxlength="20"></div>' +
+    '<div class="player-row"><input type="text" placeholder="Player 2" maxlength="20"></div>';
+}
+
+function playAgain() {
+  rounds = [];
+  gameOver = false;
+  document.getElementById('game-over').classList.add('hidden');
+  document.getElementById('round-input-card').classList.remove('hidden');
+  renderScoreboard();
+  renderRoundInput();
+  saveState();
+}
+
+function esc(str) {
+  var d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+init();
+</script>
+</body>
+</html>
