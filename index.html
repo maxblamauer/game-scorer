@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Skyjo Scorer</title>
+<title>Game Scorer</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -121,6 +121,37 @@
     padding: 10px 14px;
     flex: 1;
   }
+
+  /* Game selection */
+  .game-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .game-card {
+    background: #1a1a2e;
+    border: 2px solid #0f3460;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .game-card:hover { border-color: #e94560; }
+  .game-card:active { transform: scale(0.98); }
+  .game-card .game-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .game-card .game-tagline {
+    font-size: 0.85rem;
+    color: #888;
+  }
+
+  /* Scoreboard */
   .scoreboard {
     width: 100%;
     border-collapse: collapse;
@@ -148,8 +179,14 @@
     color: #aaa;
     font-size: 0.9rem;
   }
-  .scoreboard .doubled { color: #e94560; }
-  .scoreboard .negative { color: #4ecca3; }
+  .scoreboard .doubled {
+    color: #e94560;
+  }
+  .scoreboard .negative {
+    color: #4ecca3;
+  }
+
+  /* Round input */
   .round-entry {
     display: flex;
     flex-direction: column;
@@ -181,12 +218,17 @@
     width: 18px;
     height: 18px;
   }
-  .round-player input[type="number"] { margin-bottom: 0; }
+  .round-player input[type="number"] {
+    margin-bottom: 0;
+  }
+
   .actions {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
   }
+
+  /* Game over */
   .game-over {
     text-align: center;
     padding: 32px 24px;
@@ -201,7 +243,9 @@
     font-size: 3rem;
     margin-bottom: 8px;
   }
+
   .hidden { display: none !important; }
+
   .info-box {
     background: #0f3460;
     border-radius: 8px;
@@ -211,32 +255,94 @@
     color: #aaa;
     line-height: 1.5;
   }
+
   .round-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
+
+  .noscript-msg {
+    background: #e94560;
+    color: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .on-board-badge {
+    font-size: 0.7rem;
+    color: #4ecca3;
+    margin-left: 4px;
+  }
+  .not-on-board-badge {
+    font-size: 0.7rem;
+    color: #888;
+    margin-left: 4px;
+  }
+
+  .final-round-banner {
+    background: #e94560;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 12px;
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>Skyjo Scorer</h1>
-  <p class="subtitle">Keep score across rounds &mdash; lowest total wins!</p>
 
-  <div id="setup-screen" class="card">
-    <h2>Players</h2>
-    <div id="player-inputs" class="player-inputs">
-      <div class="player-row"><input type="text" placeholder="Player 1" maxlength="20"></div>
-      <div class="player-row"><input type="text" placeholder="Player 2" maxlength="20"></div>
+<div class="container">
+  <h1 id="page-title">Game Scorer</h1>
+  <p class="subtitle" id="page-subtitle">Choose a game to get started</p>
+
+  <noscript>
+    <div class="noscript-msg">
+      <strong>Open in Safari to use this app.</strong><br>
+      Tap the Share button, then choose "Open in Safari".
     </div>
+  </noscript>
+
+  <!-- Game Selection Screen -->
+  <div id="game-select-screen" class="card">
+    <h2>Select Game</h2>
+    <div class="game-cards">
+      <div class="game-card" onclick="selectGame('skyjo')">
+        <div class="game-name">Skyjo</div>
+        <div class="game-tagline">Lowest score wins &mdash; 2-8 players</div>
+      </div>
+      <div class="game-card" onclick="selectGame('wizard')">
+        <div class="game-name">Wizard</div>
+        <div class="game-tagline">Predict your tricks &mdash; 3-6 players</div>
+      </div>
+      <div class="game-card" onclick="selectGame('dice10000')">
+        <div class="game-name">Dice 10,000</div>
+        <div class="game-tagline">Push your luck &mdash; 2-8 players</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Setup Screen -->
+  <div id="setup-screen" class="card hidden">
+    <h2>Players</h2>
+    <div id="player-inputs" class="player-inputs"></div>
     <div class="add-remove-btns">
       <button class="btn-secondary" onclick="addPlayerInput()">+ Add Player</button>
       <button class="btn-secondary" onclick="removePlayerInput()">- Remove</button>
     </div>
     <br>
-    <button class="btn-primary" onclick="startGame()" style="width:100%">Start Game</button>
+    <div class="actions">
+      <button class="btn-primary" onclick="startGame()" style="flex:1">Start Game</button>
+      <button class="btn-secondary" onclick="backToGameSelect()">Back</button>
+    </div>
   </div>
 
+  <!-- Game Screen -->
   <div id="game-screen" class="hidden">
     <div class="card">
       <div class="round-header">
@@ -247,11 +353,10 @@
         <table class="scoreboard" id="scoreboard"></table>
       </div>
     </div>
+
     <div id="round-input-card" class="card">
       <h2 id="round-title">Round 1</h2>
-      <div class="info-box">
-        Enter each player's card total. Select who ended the round (flipped all cards first). If the ender doesn't have the lowest score, their points are doubled.
-      </div>
+      <div class="info-box" id="info-box"></div>
       <div id="round-entry" class="round-entry"></div>
       <br>
       <div class="actions">
@@ -259,6 +364,8 @@
         <button class="btn-secondary" id="undo-btn" onclick="undoLastRound()">Undo Last Round</button>
       </div>
     </div>
+
+    <!-- Game Over -->
     <div id="game-over" class="card hidden">
       <div class="game-over">
         <div class="trophy">&#127942;</div>
@@ -273,13 +380,28 @@
     </div>
   </div>
 </div>
+
 <script>
+var currentGame = null; // 'skyjo', 'wizard', 'dice10000'
 var players = [];
 var rounds = [];
 var gameOver = false;
 var storageAvailable = false;
-var STORAGE_KEY = 'skyjo-game';
 
+// Dice 10,000 specific state
+var finalRoundTriggered = false;
+var finalRoundTriggerPlayer = -1; // index of player who triggered final round
+var finalRoundTurnsPlayed = []; // tracks which players have had their final turn
+
+var STORAGE_KEY = 'game-scorer';
+
+var GAME_CONFIG = {
+  skyjo:     { name: 'Skyjo',       minPlayers: 2, maxPlayers: 8 },
+  wizard:    { name: 'Wizard',      minPlayers: 3, maxPlayers: 6 },
+  dice10000: { name: 'Dice 10,000', minPlayers: 2, maxPlayers: 8 }
+};
+
+// Check if localStorage works
 try {
   localStorage.setItem('_test', '1');
   localStorage.removeItem('_test');
@@ -290,35 +412,52 @@ try {
 
 function saveState() {
   if (!storageAvailable) return;
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ players: players, rounds: rounds, gameOver: gameOver })); } catch (e) {}
+  try {
+    var state = { currentGame: currentGame, players: players, rounds: rounds, gameOver: gameOver };
+    if (currentGame === 'dice10000') {
+      state.finalRoundTriggered = finalRoundTriggered;
+      state.finalRoundTriggerPlayer = finalRoundTriggerPlayer;
+      state.finalRoundTurnsPlayed = finalRoundTurnsPlayed;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {}
 }
+
 function loadState() {
   if (!storageAvailable) return false;
   try {
     var data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (data && data.players && data.players.length > 0) {
+    if (data && data.currentGame && data.players && data.players.length > 0) {
+      currentGame = data.currentGame;
       players = data.players;
       rounds = data.rounds || [];
       gameOver = data.gameOver || false;
+      if (currentGame === 'dice10000') {
+        finalRoundTriggered = data.finalRoundTriggered || false;
+        finalRoundTriggerPlayer = data.finalRoundTriggerPlayer != null ? data.finalRoundTriggerPlayer : -1;
+        finalRoundTurnsPlayed = data.finalRoundTurnsPlayed || [];
+      }
       return true;
     }
   } catch (e) {}
   return false;
 }
+
 function clearState() {
   if (!storageAvailable) return;
   try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
 }
 
+// Also clear old storage key
+try { localStorage.removeItem('skyjo-game'); } catch (e) {}
+
 function init() {
   if (loadState()) {
-    document.getElementById('setup-screen').classList.add('hidden');
-    document.getElementById('game-screen').classList.remove('hidden');
+    showGameScreen();
+    updateTitleForGame();
     renderScoreboard();
     if (gameOver) {
-      var totals = players.map(function(_, pi) {
-        return rounds.reduce(function(sum, r) { return sum + r[pi].finalScore; }, 0);
-      });
+      var totals = computeTotals();
       endGame(totals);
     } else {
       document.getElementById('game-over').classList.add('hidden');
@@ -327,34 +466,98 @@ function init() {
     }
     return;
   }
+  // Default: show game selection
+  showScreen('game-select-screen');
+}
+
+function showScreen(screenId) {
+  ['game-select-screen', 'setup-screen', 'game-screen'].forEach(function(id) {
+    document.getElementById(id).classList.add('hidden');
+  });
+  document.getElementById(screenId).classList.remove('hidden');
+}
+
+function showGameScreen() {
+  showScreen('game-screen');
+}
+
+function updateTitleForGame() {
+  var title = document.getElementById('page-title');
+  var subtitle = document.getElementById('page-subtitle');
+  if (!currentGame) {
+    title.textContent = 'Game Scorer';
+    subtitle.textContent = 'Choose a game to get started';
+    return;
+  }
+  var cfg = GAME_CONFIG[currentGame];
+  title.textContent = cfg.name + ' Scorer';
+  if (currentGame === 'skyjo') {
+    subtitle.textContent = 'Keep score across rounds \u2014 lowest total wins!';
+  } else if (currentGame === 'wizard') {
+    subtitle.textContent = 'Keep score across rounds \u2014 highest total wins!';
+  } else if (currentGame === 'dice10000') {
+    subtitle.textContent = 'Race to 10,000 points \u2014 highest score wins!';
+  }
+}
+
+function selectGame(game) {
+  currentGame = game;
+  updateTitleForGame();
+  setupPlayerInputs();
+  showScreen('setup-screen');
+}
+
+function setupPlayerInputs() {
+  var cfg = GAME_CONFIG[currentGame];
+  var container = document.getElementById('player-inputs');
+  container.innerHTML = '';
+  for (var i = 0; i < cfg.minPlayers; i++) {
+    addPlayerRow(container, i + 1);
+  }
+}
+
+function addPlayerRow(container, num) {
+  var div = document.createElement('div');
+  div.className = 'player-row';
+  div.innerHTML = '<input type="text" placeholder="Player ' + num + '" maxlength="20">';
+  container.appendChild(div);
 }
 
 function addPlayerInput() {
   var container = document.getElementById('player-inputs');
   var count = container.children.length;
-  if (count >= 8) return;
-  var div = document.createElement('div');
-  div.className = 'player-row';
-  div.innerHTML = '<input type="text" placeholder="Player ' + (count + 1) + '" maxlength="20">';
-  container.appendChild(div);
+  var cfg = GAME_CONFIG[currentGame];
+  if (count >= cfg.maxPlayers) return;
+  addPlayerRow(container, count + 1);
 }
 
 function removePlayerInput() {
   var container = document.getElementById('player-inputs');
-  if (container.children.length > 2) container.removeChild(container.lastChild);
+  var cfg = GAME_CONFIG[currentGame];
+  if (container.children.length > cfg.minPlayers) {
+    container.removeChild(container.lastChild);
+  }
+}
+
+function backToGameSelect() {
+  currentGame = null;
+  updateTitleForGame();
+  showScreen('game-select-screen');
 }
 
 function startGame() {
   var inputs = document.querySelectorAll('#player-inputs input');
   players = [];
-  for (var i = 0; i < inputs.length; i++) {
-    var name = inputs[i].value.trim() || ('Player ' + (i + 1));
+  inputs.forEach(function(inp, i) {
+    var name = inp.value.trim() || ('Player ' + (i + 1));
     players.push(name);
-  }
+  });
   rounds = [];
   gameOver = false;
-  document.getElementById('setup-screen').classList.add('hidden');
-  document.getElementById('game-screen').classList.remove('hidden');
+  finalRoundTriggered = false;
+  finalRoundTriggerPlayer = -1;
+  finalRoundTurnsPlayed = [];
+  showGameScreen();
   document.getElementById('game-over').classList.add('hidden');
   document.getElementById('round-input-card').classList.remove('hidden');
   renderScoreboard();
@@ -362,17 +565,30 @@ function startGame() {
   saveState();
 }
 
+function computeTotals() {
+  return players.map(function(_, pi) {
+    return rounds.reduce(function(sum, r) { return sum + r[pi].finalScore; }, 0);
+  });
+}
+
+function getTotalRoundsWizard() {
+  return Math.floor(60 / players.length);
+}
+
 function renderScoreboard() {
   var table = document.getElementById('scoreboard');
-  var totals = [];
-  for (var i = 0; i < players.length; i++) totals.push(0);
+  var totals = players.map(function() { return 0; });
+
   var html = '<thead><tr><th></th>';
-  for (var i = 0; i < players.length; i++) html += '<th>' + esc(players[i]) + '</th>';
+  players.forEach(function(p) { html += '<th>' + esc(p) + '</th>'; });
   html += '</tr></thead><tbody>';
-  for (var ri = 0; ri < rounds.length; ri++) {
-    html += '<tr><td style="color:#888;font-size:0.8rem;text-align:left">R' + (ri + 1) + '</td>';
-    for (var pi = 0; pi < rounds[ri].length; pi++) {
-      var entry = rounds[ri][pi];
+
+  rounds.forEach(function(round, ri) {
+    html += '<tr>';
+    html += '<td style="color:#888;font-size:0.8rem;text-align:left">';
+    html += currentGame === 'dice10000' ? 'T' + (ri + 1) : 'R' + (ri + 1);
+    html += '</td>';
+    round.forEach(function(entry, pi) {
       totals[pi] += entry.finalScore;
       var cls = 'round-score';
       if (entry.doubled) cls += ' doubled';
@@ -380,74 +596,241 @@ function renderScoreboard() {
       var suffix = entry.doubled ? ' (x2)' : '';
       var enderMark = entry.wasEnder ? '*' : '';
       html += '<td class="' + cls + '">' + entry.finalScore + suffix + enderMark + '</td>';
-    }
+    });
     html += '</tr>';
+  });
+
+  // Determine best score
+  var bestTotal;
+  if (currentGame === 'skyjo') {
+    bestTotal = Math.min.apply(null, totals);
+  } else {
+    bestTotal = Math.max.apply(null, totals);
   }
-  var minTotal = totals[0];
-  for (var i = 1; i < totals.length; i++) if (totals[i] < minTotal) minTotal = totals[i];
-  html += '<tr class="total-row"><td style="text-align:left;font-size:0.8rem">Total</td>';
-  for (var i = 0; i < totals.length; i++) {
-    var style = (totals[i] === minTotal && rounds.length > 0) ? 'color:#4ecca3' : '';
-    html += '<td style="' + style + '">' + totals[i] + '</td>';
-  }
+
+  html += '<tr class="total-row">';
+  html += '<td style="text-align:left;font-size:0.8rem">Total</td>';
+  totals.forEach(function(t, pi) {
+    var style = (t === bestTotal && rounds.length > 0) ? 'color:#4ecca3' : '';
+    // Dice 10,000: show on-board indicator
+    if (currentGame === 'dice10000') {
+      var badge = t >= 800 ? '<span class="on-board-badge">&#10003;</span>' : (rounds.length > 0 ? '<span class="not-on-board-badge">&#8212;</span>' : '');
+      html += '<td style="' + style + '">' + t + badge + '</td>';
+    } else {
+      html += '<td style="' + style + '">' + t + '</td>';
+    }
+  });
   html += '</tr></tbody>';
+
   table.innerHTML = html;
   document.getElementById('undo-btn').classList.toggle('hidden', rounds.length === 0);
 }
 
 function renderRoundInput() {
-  document.getElementById('round-title').textContent = 'Round ' + (rounds.length + 1);
+  var roundNum = rounds.length + 1;
   var container = document.getElementById('round-entry');
+  var infoBox = document.getElementById('info-box');
   container.innerHTML = '';
-  for (var i = 0; i < players.length; i++) {
-    var div = document.createElement('div');
-    div.className = 'round-player';
-    div.innerHTML =
-      '<span class="name">' + esc(players[i]) + '</span>' +
-      '<label class="ender-label"><input type="radio" name="ender" value="' + i + '"> Ended</label>' +
-      '<input type="number" id="score-' + i + '" placeholder="0" inputmode="numeric" pattern="-?[0-9]*">';
-    container.appendChild(div);
+
+  if (currentGame === 'skyjo') {
+    document.getElementById('round-title').textContent = 'Round ' + roundNum;
+    infoBox.textContent = 'Enter each player\'s card total. Select who ended the round (flipped all cards first). If the ender doesn\'t have the lowest score, their points are doubled.';
+
+    players.forEach(function(p, i) {
+      var div = document.createElement('div');
+      div.className = 'round-player';
+      div.innerHTML =
+        '<span class="name">' + esc(p) + '</span>' +
+        '<label class="ender-label">' +
+        '<input type="radio" name="ender" value="' + i + '"> Ended' +
+        '</label>' +
+        '<input type="number" id="score-' + i + '" placeholder="0" inputmode="numeric" pattern="-?[0-9]*">';
+      container.appendChild(div);
+    });
+
+  } else if (currentGame === 'wizard') {
+    var totalRounds = getTotalRoundsWizard();
+    document.getElementById('round-title').textContent = 'Round ' + roundNum + ' of ' + totalRounds;
+    infoBox.textContent = 'Enter each player\u2019s score for this round.';
+
+    players.forEach(function(p, i) {
+      var div = document.createElement('div');
+      div.className = 'round-player';
+      div.innerHTML =
+        '<span class="name">' + esc(p) + '</span>' +
+        '<input type="number" id="score-' + i + '" placeholder="0" inputmode="numeric" pattern="-?[0-9]*">';
+      container.appendChild(div);
+    });
+
+  } else if (currentGame === 'dice10000') {
+    document.getElementById('round-title').textContent = 'Turn ' + roundNum;
+    var infoText = 'Enter each player\u2019s score for this turn. Need 800 to get on the board.';
+    infoBox.textContent = infoText;
+
+    // Show final round banner if triggered
+    if (finalRoundTriggered) {
+      var triggerName = players[finalRoundTriggerPlayer] || 'A player';
+      var banner = document.createElement('div');
+      banner.className = 'final-round-banner';
+      banner.textContent = triggerName + ' reached 10,000! Final round \u2014 everyone else gets one more turn.';
+      container.appendChild(banner);
+    }
+
+    var totals = computeTotals();
+    players.forEach(function(p, i) {
+      var div = document.createElement('div');
+      div.className = 'round-player';
+      var onBoard = totals[i] >= 800;
+      var badge = onBoard ? ' <span class="on-board-badge">(on board)</span>' : ' <span class="not-on-board-badge">(not on board)</span>';
+      if (rounds.length === 0) badge = '';
+      var disabled = '';
+      if (finalRoundTriggered && (i === finalRoundTriggerPlayer || finalRoundTurnsPlayed.indexOf(i) !== -1)) {
+        disabled = ' disabled';
+      }
+      div.innerHTML =
+        '<span class="name">' + esc(p) + badge + '</span>' +
+        '<input type="number" id="score-' + i + '" placeholder="0" inputmode="numeric" pattern="-?[0-9]*"' + disabled + '>';
+      container.appendChild(div);
+    });
   }
 }
 
 function submitRound() {
   if (gameOver) return;
+
   var scores = [];
   var valid = true;
-  for (var i = 0; i < players.length; i++) {
+  players.forEach(function(_, i) {
     var input = document.getElementById('score-' + i);
+    if (input.disabled) {
+      scores.push(0);
+      return;
+    }
     var val = input.value.trim();
     if (val === '') valid = false;
     scores.push(parseInt(val, 10) || 0);
+  });
+
+  if (!valid) {
+    alert('Please enter a score for every player.');
+    return;
   }
-  if (!valid) { alert('Please enter a score for every player.'); return; }
+
+  if (currentGame === 'skyjo') {
+    submitRoundSkyjo(scores);
+  } else if (currentGame === 'wizard') {
+    submitRoundWizard(scores);
+  } else if (currentGame === 'dice10000') {
+    submitRoundDice(scores);
+  }
+}
+
+function submitRoundSkyjo(scores) {
   var enderRadio = document.querySelector('input[name="ender"]:checked');
   var enderIndex = enderRadio ? parseInt(enderRadio.value) : -1;
-  var round = [];
-  for (var i = 0; i < players.length; i++) {
+
+  var round = players.map(function(name, i) {
     var finalScore = scores[i];
     var doubled = false;
     if (i === enderIndex && scores[i] > 0) {
-      var beaten = false;
-      for (var j = 0; j < scores.length; j++) {
-        if (j !== i && scores[j] <= scores[i]) { beaten = true; break; }
+      var othersBeatOrTied = scores.some(function(s, j) {
+        return j !== i && s <= scores[i];
+      });
+      if (othersBeatOrTied) {
+        finalScore = scores[i] * 2;
+        doubled = true;
       }
-      if (beaten) { finalScore = scores[i] * 2; doubled = true; }
     }
-    round.push({ name: players[i], rawScore: scores[i], wasEnder: i === enderIndex, finalScore: finalScore, doubled: doubled });
-  }
+    return { name: name, rawScore: scores[i], wasEnder: i === enderIndex, finalScore: finalScore, doubled: doubled };
+  });
+
   rounds.push(round);
   renderScoreboard();
-  var totals = [];
-  for (var pi = 0; pi < players.length; pi++) {
-    var t = 0;
-    for (var ri = 0; ri < rounds.length; ri++) t += rounds[ri][pi].finalScore;
-    totals.push(t);
+
+  var totals = computeTotals();
+  if (totals.some(function(t) { return t >= 100; })) {
+    endGame(totals);
+  } else {
+    renderRoundInput();
   }
-  var over = false;
-  for (var i = 0; i < totals.length; i++) if (totals[i] >= 100) { over = true; break; }
-  if (over) endGame(totals);
-  else renderRoundInput();
+  saveState();
+}
+
+function submitRoundWizard(scores) {
+  var round = players.map(function(name, i) {
+    return { name: name, rawScore: scores[i], wasEnder: false, finalScore: scores[i], doubled: false };
+  });
+
+  rounds.push(round);
+  renderScoreboard();
+
+  var totalRounds = getTotalRoundsWizard();
+  if (rounds.length >= totalRounds) {
+    var totals = computeTotals();
+    endGame(totals);
+  } else {
+    renderRoundInput();
+  }
+  saveState();
+}
+
+function submitRoundDice(scores) {
+  // Validate 800 threshold for players not yet on the board
+  var currentTotals = computeTotals();
+  for (var i = 0; i < players.length; i++) {
+    if (scores[i] > 0 && currentTotals[i] < 800 && (currentTotals[i] + scores[i]) < 800) {
+      alert(players[i] + ' needs at least 800 to get on the board. Their total would only be ' + (currentTotals[i] + scores[i]) + '. Enter 0 if they didn\'t score this turn.');
+      return;
+    }
+  }
+
+  var round = players.map(function(name, i) {
+    return { name: name, rawScore: scores[i], wasEnder: false, finalScore: scores[i], doubled: false };
+  });
+
+  rounds.push(round);
+  renderScoreboard();
+
+  var totals = computeTotals();
+
+  if (finalRoundTriggered) {
+    // Record which players just had their final turn
+    for (var j = 0; j < players.length; j++) {
+      if (j !== finalRoundTriggerPlayer && finalRoundTurnsPlayed.indexOf(j) === -1) {
+        finalRoundTurnsPlayed.push(j);
+      }
+    }
+    // Check if all other players have had their final turn
+    var allDone = true;
+    for (var k = 0; k < players.length; k++) {
+      if (k !== finalRoundTriggerPlayer && finalRoundTurnsPlayed.indexOf(k) === -1) {
+        allDone = false;
+        break;
+      }
+    }
+    if (allDone) {
+      endGame(totals);
+    } else {
+      renderRoundInput();
+    }
+  } else {
+    // Check if any player reached 10,000
+    var triggerIndex = -1;
+    for (var m = 0; m < totals.length; m++) {
+      if (totals[m] >= 10000) {
+        triggerIndex = m;
+        break;
+      }
+    }
+    if (triggerIndex !== -1) {
+      finalRoundTriggered = true;
+      finalRoundTriggerPlayer = triggerIndex;
+      finalRoundTurnsPlayed = [];
+      renderRoundInput();
+    } else {
+      renderRoundInput();
+    }
+  }
   saveState();
 }
 
@@ -455,6 +838,23 @@ function undoLastRound() {
   if (rounds.length === 0) return;
   rounds.pop();
   gameOver = false;
+
+  // For dice 10,000, recalculate final round state
+  if (currentGame === 'dice10000') {
+    finalRoundTriggered = false;
+    finalRoundTriggerPlayer = -1;
+    finalRoundTurnsPlayed = [];
+    // Re-check if any player was at 10,000+ before the undone round
+    var totals = computeTotals();
+    for (var i = 0; i < totals.length; i++) {
+      if (totals[i] >= 10000) {
+        finalRoundTriggered = true;
+        finalRoundTriggerPlayer = i;
+        break;
+      }
+    }
+  }
+
   document.getElementById('game-over').classList.add('hidden');
   document.getElementById('round-input-card').classList.remove('hidden');
   renderScoreboard();
@@ -464,30 +864,42 @@ function undoLastRound() {
 
 function endGame(totals) {
   gameOver = true;
-  var minTotal = totals[0], winnerIndex = 0;
-  for (var i = 1; i < totals.length; i++) if (totals[i] < minTotal) { minTotal = totals[i]; winnerIndex = i; }
+  var winnerIndex, bestTotal;
+
+  if (currentGame === 'skyjo') {
+    bestTotal = Math.min.apply(null, totals);
+    winnerIndex = totals.indexOf(bestTotal);
+  } else {
+    bestTotal = Math.max.apply(null, totals);
+    winnerIndex = totals.indexOf(bestTotal);
+  }
+
   document.getElementById('round-input-card').classList.add('hidden');
   document.getElementById('game-over').classList.remove('hidden');
   document.getElementById('winner-name').textContent = players[winnerIndex] + ' wins!';
-  document.getElementById('winner-detail').textContent = 'with ' + minTotal + ' points (' + rounds.length + ' rounds)';
+  document.getElementById('winner-detail').textContent = 'with ' + bestTotal + ' points (' + rounds.length + ' rounds)';
   saveState();
 }
 
 function newGame() {
   clearState();
-  document.getElementById('setup-screen').classList.remove('hidden');
-  document.getElementById('game-screen').classList.add('hidden');
+  currentGame = null;
   players = [];
   rounds = [];
   gameOver = false;
-  document.getElementById('player-inputs').innerHTML =
-    '<div class="player-row"><input type="text" placeholder="Player 1" maxlength="20"></div>' +
-    '<div class="player-row"><input type="text" placeholder="Player 2" maxlength="20"></div>';
+  finalRoundTriggered = false;
+  finalRoundTriggerPlayer = -1;
+  finalRoundTurnsPlayed = [];
+  updateTitleForGame();
+  showScreen('game-select-screen');
 }
 
 function playAgain() {
   rounds = [];
   gameOver = false;
+  finalRoundTriggered = false;
+  finalRoundTriggerPlayer = -1;
+  finalRoundTurnsPlayed = [];
   document.getElementById('game-over').classList.add('hidden');
   document.getElementById('round-input-card').classList.remove('hidden');
   renderScoreboard();
